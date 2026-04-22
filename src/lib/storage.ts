@@ -94,6 +94,75 @@ export async function listUserAudits(
   return (data || []).map((d) => d.report as AuditReport);
 }
 
+export interface PublicAuditSummary {
+  id: string;
+  url: string;
+  finalUrl: string;
+  title: string | null;
+  overallScore: number;
+  createdAt: string;
+}
+
+// Lightweight summaries for homepage / leaderboard — we select only the
+// columns we need to avoid shipping entire JSON reports across the wire.
+export async function listRecentPublicAudits(
+  limit = 12,
+): Promise<PublicAuditSummary[]> {
+  if (!isSupabaseConfigured) return [];
+  const sb = getAdminSupabase();
+  if (!sb) return [];
+  const { data } = await sb
+    .from("audits")
+    .select("id, url, final_url, title, overall_score, created_at")
+    .eq("is_public", true)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data || []).map((r) => ({
+    id: r.id as string,
+    url: r.url as string,
+    finalUrl: (r.final_url as string) ?? (r.url as string),
+    title: (r.title as string | null) ?? null,
+    overallScore: (r.overall_score as number) ?? 0,
+    createdAt: r.created_at as string,
+  }));
+}
+
+export async function listTopPublicAudits(
+  limit = 20,
+  days = 7,
+): Promise<PublicAuditSummary[]> {
+  if (!isSupabaseConfigured) return [];
+  const sb = getAdminSupabase();
+  if (!sb) return [];
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const { data } = await sb
+    .from("audits")
+    .select("id, url, final_url, title, overall_score, created_at")
+    .eq("is_public", true)
+    .gte("created_at", since)
+    .order("overall_score", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data || []).map((r) => ({
+    id: r.id as string,
+    url: r.url as string,
+    finalUrl: (r.final_url as string) ?? (r.url as string),
+    title: (r.title as string | null) ?? null,
+    overallScore: (r.overall_score as number) ?? 0,
+    createdAt: r.created_at as string,
+  }));
+}
+
+export async function countAudits(): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  const sb = getAdminSupabase();
+  if (!sb) return 0;
+  const { count } = await sb
+    .from("audits")
+    .select("id", { count: "exact", head: true });
+  return count ?? 0;
+}
+
 export interface UsageRow {
   user_id: string | null;
   ip: string;
