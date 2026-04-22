@@ -32,7 +32,10 @@ export async function saveAuditForUser(
   report: AuditReport,
   userId: string
 ): Promise<void> {
-  await saveAuditPublic(report);
+  // Cache locally and do a SINGLE upsert that includes user_id. Previously
+  // this called saveAuditPublic first (which wrote the row with no user_id)
+  // and could leave the audit orphaned if the second write failed.
+  mem.set(report.id, { report, expires: Date.now() + MEM_TTL });
   if (!isSupabaseConfigured) return;
   const sb = getAdminSupabase();
   if (!sb) return;

@@ -37,14 +37,21 @@ export async function scrape(url: string): Promise<ScrapeResult> {
   let bytes = 0;
   const chunks: Uint8Array[] = [];
   if (reader) {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) {
-        if (bytes + value.byteLength > MAX_BYTES) break;
-        bytes += value.byteLength;
-        chunks.push(value);
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          if (bytes + value.byteLength > MAX_BYTES) break;
+          bytes += value.byteLength;
+          chunks.push(value);
+        }
       }
+    } finally {
+      // Release the underlying connection when we bail early (e.g. MAX_BYTES
+      // reached) or if an exception bubbles up. cancel() is a no-op after the
+      // stream has fully drained.
+      reader.cancel().catch(() => {});
     }
   }
   const buf = new Uint8Array(bytes);
