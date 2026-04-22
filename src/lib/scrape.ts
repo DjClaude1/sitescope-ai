@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import type { PageSignals } from "./types";
+import { assertPublicUrl, SsrfBlockedError } from "./ssrf";
 
 export interface ScrapeResult {
   finalUrl: string;
@@ -11,49 +12,92 @@ export interface ScrapeResult {
 }
 
 const MAX_BYTES = 1_500_000; // 1.5MB cap
+const TOTAL_TIMEOUT_MS = 20_000; // covers headers + body drain
+const MAX_REDIRECTS = 5;
+
+const COMMON_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (compatible; SiteScopeAI/1.0; +https://sitescope.ai/bot)",
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+};
 
 export async function scrape(url: string): Promise<ScrapeResult> {
   const started = Date.now();
+  // Single abort timer covers the whole request — headers AND the body
+  // reading loop. A slow-body attack can't out-wait us.
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
-  let res: Response;
+  const timeout = setTimeout(() => controller.abort(), TOTAL_TIMEOUT_MS);
+
   try {
-    res = await fetch(url, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; SiteScopeAI/1.0; +https://sitescope.ai/bot)",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-    });
+    // Manual redirect handling: fetch's built-in redirect follower bypasses
+    // our SSRF gate for any subsequent hop. We re-validate every target.
+    let currentUrl = url;
+    let res: Response | null = null;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      await assertPublicUrl(currentUrl);
+      const r: Response = await fetch(currentUrl, {
+        signal: controller.signal,
+        redirect: "manual",
+        headers: COMMON_HEADERS,
+      });
+      if (r.status >= 300 && r.status < 400) {
+        const loc = r.headers.get("location");
+        // Drain the redirect body so the connection can be reused.
+        r.body?.cancel().catch(() => {});
+        if (!loc) {
+          res = r;
+          break;
+        }
+        if (hop === MAX_REDIRECTS) {
+          throw new Error("Too many redirects");
+        }
+        currentUrl = new URL(loc, currentUrl).toString();
+        continue;
+      }
+      res = r;
+      break;
+    }
+    if (!res) throw new Error("No response");
+
+    const reader = res.body?.getReader();
+    let bytes = 0;
+    const chunks: Uint8Array[] = [];
+    if (reader) {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            if (bytes + value.byteLength > MAX_BYTES) break;
+            bytes += value.byteLength;
+            chunks.push(value);
+          }
+        }
+      } finally {
+        // Release the underlying connection when we bail early (e.g.
+        // MAX_BYTES reached) or if an exception bubbles up. cancel() is a
+        // no-op after the stream has fully drained.
+        reader.cancel().catch(() => {});
+      }
+    }
+    return buildResult(res, currentUrl, chunks, bytes, started);
+  } catch (e) {
+    if (e instanceof SsrfBlockedError) throw e;
+    throw e;
   } finally {
     clearTimeout(timeout);
   }
+}
 
-  const reader = res.body?.getReader();
-  let bytes = 0;
-  const chunks: Uint8Array[] = [];
-  if (reader) {
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          if (bytes + value.byteLength > MAX_BYTES) break;
-          bytes += value.byteLength;
-          chunks.push(value);
-        }
-      }
-    } finally {
-      // Release the underlying connection when we bail early (e.g. MAX_BYTES
-      // reached) or if an exception bubbles up. cancel() is a no-op after the
-      // stream has fully drained.
-      reader.cancel().catch(() => {});
-    }
-  }
+function buildResult(
+  res: Response,
+  requestedUrl: string,
+  chunks: Uint8Array[],
+  bytes: number,
+  started: number
+): ScrapeResult {
   const buf = new Uint8Array(bytes);
   let offset = 0;
   for (const c of chunks) {
@@ -62,11 +106,12 @@ export async function scrape(url: string): Promise<ScrapeResult> {
   }
   const html = new TextDecoder("utf-8", { fatal: false }).decode(buf);
 
-  const signals = extractSignals(html, res.url || url);
+  const finalUrl = res.url || requestedUrl;
+  const signals = extractSignals(html, finalUrl);
   const visibleText = extractVisibleText(html);
 
   return {
-    finalUrl: res.url || url,
+    finalUrl,
     statusCode: res.status,
     html,
     loadTimeMs: Date.now() - started,

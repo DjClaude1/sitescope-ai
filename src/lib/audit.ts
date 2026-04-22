@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { geminiJSON, isGeminiConfigured } from "./gemini";
 import { scrape } from "./scrape";
+import { assertPublicUrl } from "./ssrf";
 import type {
   AuditCategoryKey,
   AuditIssue,
@@ -11,6 +12,9 @@ import type {
 
 export async function runAudit(inputUrl: string): Promise<AuditReport> {
   const normalized = normalizeUrl(inputUrl);
+  // SSRF gate: reject URLs that resolve to private / loopback / link-local
+  // / cloud-metadata addresses BEFORE we open a socket to them.
+  await assertPublicUrl(normalized);
   const scraped = await scrape(normalized);
   const signals: PageSignals = {
     ...scraped.signals,
