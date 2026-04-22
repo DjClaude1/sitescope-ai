@@ -148,3 +148,52 @@ export async function incrementUsage(identifier: {
     console.error("[storage] increment_usage rpc failed", error);
   }
 }
+
+// Atomic check-and-increment for free-tier rate limiting. Prevents TOCTOU
+// between the limit check and the counter increment.
+//
+// Returns `allowed=true` only if the call succeeded AND the post-increment
+// count is <= limit. When Supabase isn't configured we fall through to
+// "allowed" (the app is effectively single-tenant/demo in that mode).
+export async function reserveAudit(
+  identifier: { userId?: string; ip: string },
+  limit: number
+): Promise<{ allowed: boolean; count: number }> {
+  if (!isSupabaseConfigured) return { allowed: true, count: 0 };
+  const sb = getAdminSupabase();
+  if (!sb) return { allowed: true, count: 0 };
+  const day = new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await sb.rpc("reserve_audit", {
+    p_user_id: identifier.userId ?? null,
+    p_ip: identifier.ip,
+    p_day: day,
+    p_limit: limit,
+  });
+  if (error) {
+    console.error("[storage] reserve_audit rpc failed", error);
+    // Fail closed: deny the audit rather than risk unbounded bypass.
+    return { allowed: false, count: limit };
+  }
+  const row = Array.isArray(data) ? data[0] : data;
+  const allowed = Boolean(row?.allowed);
+  const count = typeof row?.new_count === "number" ? row.new_count : 0;
+  return { allowed, count };
+}
+
+// Refund a reserved slot when the downstream audit fails. No-op on error.
+export async function refundUsage(identifier: {
+  userId?: string;
+  ip: string;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const sb = getAdminSupabase();
+  if (!sb) return;
+  const day = new Date().toISOString().slice(0, 10);
+  const { error } = await sb.rpc("refund_usage", {
+    p_user_id: identifier.userId ?? null,
+    p_ip: identifier.ip,
+    p_day: day,
+  });
+  if (error) console.error("[storage] refund_usage rpc failed", error);
+}

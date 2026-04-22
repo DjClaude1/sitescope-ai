@@ -84,6 +84,71 @@ begin
 end;
 $$ language plpgsql security definer;
 
+-- Atomic check-and-increment for free-tier rate limiting.
+-- Returns (allowed, new_count). If new_count would exceed p_limit, the
+-- update is blocked by the WHERE clause and allowed is false — no TOCTOU
+-- window because INSERT...ON CONFLICT DO UPDATE is evaluated atomically.
+create or replace function public.reserve_audit(
+  p_user_id uuid,
+  p_ip text,
+  p_day date,
+  p_limit int
+) returns table(allowed boolean, new_count int) as $$
+declare
+  new_cnt int;
+  cur_cnt int;
+begin
+  if p_user_id is not null then
+    insert into public.usage (user_id, ip, day, count)
+    values (p_user_id, p_ip, p_day, 1)
+    on conflict (user_id, day) where user_id is not null
+    do update set count = public.usage.count + 1
+      where public.usage.count < p_limit
+    returning count into new_cnt;
+  else
+    insert into public.usage (user_id, ip, day, count)
+    values (null, p_ip, p_day, 1)
+    on conflict (ip, day) where user_id is null
+    do update set count = public.usage.count + 1
+      where public.usage.count < p_limit
+    returning count into new_cnt;
+  end if;
+
+  if new_cnt is not null then
+    return query select true, new_cnt;
+    return;
+  end if;
+
+  -- WHERE clause blocked the update — limit already reached.
+  if p_user_id is not null then
+    select count into cur_cnt from public.usage
+      where user_id = p_user_id and day = p_day;
+  else
+    select count into cur_cnt from public.usage
+      where ip = p_ip and day = p_day and user_id is null;
+  end if;
+  return query select false, coalesce(cur_cnt, p_limit);
+end;
+$$ language plpgsql security definer;
+
+-- Soft decrement — never below zero. Used to refund a reservation if the
+-- audit itself fails after we've already charged the user's quota.
+create or replace function public.refund_usage(
+  p_user_id uuid,
+  p_ip text,
+  p_day date
+) returns void as $$
+begin
+  if p_user_id is not null then
+    update public.usage set count = greatest(count - 1, 0)
+      where user_id = p_user_id and day = p_day;
+  else
+    update public.usage set count = greatest(count - 1, 0)
+      where ip = p_ip and day = p_day and user_id is null;
+  end if;
+end;
+$$ language plpgsql security definer;
+
 -- =====================================================================
 -- Monitors (Pro: weekly re-audit + email)
 -- =====================================================================

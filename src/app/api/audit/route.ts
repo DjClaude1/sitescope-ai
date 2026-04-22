@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { runAudit } from "@/lib/audit";
-import { saveAuditPublic, saveAuditForUser, getUsage, incrementUsage } from "@/lib/storage";
-import { canAudit, FREE_DAILY_LIMIT } from "@/lib/plan";
+import {
+  saveAuditPublic,
+  saveAuditForUser,
+  getUsage,
+  incrementUsage,
+  reserveAudit,
+  refundUsage,
+} from "@/lib/storage";
+import { FREE_DAILY_LIMIT } from "@/lib/plan";
 import { getAdminSupabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -26,31 +33,48 @@ export async function POST(req: Request) {
 
   const ip = getClientIp(req);
   const userId = await resolveUserId(req);
-  const { count, plan } = await getUsage({ userId, ip });
-  const gate = canAudit(plan, count);
-  if (!gate.allowed) {
-    return NextResponse.json(
-      {
-        error: "Daily free limit reached",
-        code: "LIMIT_REACHED",
-        limit: FREE_DAILY_LIMIT,
-        plan,
-      },
-      { status: 402 }
-    );
+  const { plan } = await getUsage({ userId, ip });
+
+  // Reserve quota BEFORE running the audit so that concurrent requests
+  // can't all pass a stale read of the counter. Pro plan skips the check
+  // (still increments so history + analytics are accurate).
+  let reservedCount = 0;
+  if (plan === "pro") {
+    await incrementUsage({ userId, ip });
+  } else {
+    const reservation = await reserveAudit({ userId, ip }, FREE_DAILY_LIMIT);
+    if (!reservation.allowed) {
+      return NextResponse.json(
+        {
+          error: "Daily free limit reached",
+          code: "LIMIT_REACHED",
+          limit: FREE_DAILY_LIMIT,
+          plan,
+        },
+        { status: 402 }
+      );
+    }
+    reservedCount = reservation.count;
   }
 
   try {
     const report = await runAudit(parsed.data.url);
     if (userId) await saveAuditForUser(report, userId);
     else await saveAuditPublic(report);
-    await incrementUsage({ userId, ip });
     return NextResponse.json({
       report,
-      remaining: plan === "pro" ? null : Math.max(0, gate.remaining - 1),
+      remaining:
+        plan === "pro"
+          ? null
+          : Math.max(0, FREE_DAILY_LIMIT - reservedCount),
       plan,
     });
   } catch (e: unknown) {
+    // Audit failed — refund the quota we reserved so the user isn't
+    // charged for our mistake.
+    if (plan !== "pro") {
+      await refundUsage({ userId, ip });
+    }
     const msg = e instanceof Error ? e.message : "Audit failed";
     return NextResponse.json({ error: msg }, { status: 500 });
   }

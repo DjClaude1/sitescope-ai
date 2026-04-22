@@ -68,18 +68,27 @@ export async function GET(req: Request) {
   return NextResponse.json({ ok: true, processed });
 }
 
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function weeklyEmail(r: AuditReport, delta: number): string {
   const arrow = delta >= 0 ? "▲" : "▼";
   return `<div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px">
   <h1 style="margin:0 0 12px">Weekly site report</h1>
-  <p style="color:#555">${r.finalUrl}</p>
+  <p style="color:#555">${esc(r.finalUrl)}</p>
   <div style="background:#0f0f1e;color:#fff;border-radius:12px;padding:20px;margin:16px 0">
     <div style="font-size:48px;font-weight:600">${r.overallScore}<span style="font-size:16px;color:#888"> /100 ${arrow} ${Math.abs(delta)}</span></div>
     <div style="color:#aaa">Overall score</div>
   </div>
-  <p>${r.aiSummary}</p>
+  <p>${esc(r.aiSummary)}</p>
   <p><strong>Top issues</strong></p>
-  <ul>${r.issues.slice(0, 5).map((i) => `<li>${i.title}</li>`).join("")}</ul>
+  <ul>${r.issues.slice(0, 5).map((i) => `<li>${esc(i.title)}</li>`).join("")}</ul>
   <p style="color:#777;font-size:12px">— SiteScope AI</p>
 </div>`;
 }

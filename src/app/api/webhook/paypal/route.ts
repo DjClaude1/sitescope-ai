@@ -142,14 +142,47 @@ export async function POST(req: Request) {
         : null;
   if (!plan) return NextResponse.json({ ok: true, ignored: type });
 
-  await sb.from("profiles").upsert(
-    {
-      email,
+  // The profiles.id column is NOT NULL and references auth.users(id), so a
+  // blind upsert on email will fail when the profile hasn't been created
+  // yet. Look up the existing profile first; if it's missing, return 500
+  // so PayPal retries later (the auth trigger will have created the row by
+  // then, or the user will have signed up). This prevents paid users from
+  // silently never being upgraded.
+  const { data: existing, error: lookupError } = await sb
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+  if (lookupError) {
+    console.error("[paypal] profile lookup failed", lookupError);
+    return NextResponse.json(
+      { ok: false, error: "profile_lookup_failed" },
+      { status: 500 }
+    );
+  }
+  if (!existing) {
+    console.warn("[paypal] no profile for email, ask PayPal to retry", email);
+    return NextResponse.json(
+      { ok: false, error: "profile_not_found", email },
+      { status: 500 }
+    );
+  }
+
+  const { error: updateError } = await sb
+    .from("profiles")
+    .update({
       plan,
       paypal_subscription_id: resource.id || null,
       updated_at: new Date().toISOString(),
-    },
-    { onConflict: "email" }
-  );
+    })
+    .eq("id", existing.id);
+  if (updateError) {
+    console.error("[paypal] profile update failed", updateError);
+    return NextResponse.json(
+      { ok: false, error: "profile_update_failed" },
+      { status: 500 }
+    );
+  }
+
   return NextResponse.json({ ok: true });
 }
