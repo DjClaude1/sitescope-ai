@@ -24,7 +24,10 @@ export default async function OgImage({ params }: { params: { id: string } }) {
   const report = await getAudit(params.id);
   const host = report ? hostOf(report.finalUrl || report.url) : "sitescope.ai";
   const score = report?.overallScore ?? 0;
-  const title = report?.title || host;
+  const rawTitle = report?.title || host;
+  const title = rawTitle.length > 120 ? rawTitle.slice(0, 117) + "…" : rawTitle;
+  const tagline =
+    "AI-powered audit · SEO, performance, accessibility, conversion, content";
 
   return new ImageResponse(
     (
@@ -56,9 +59,12 @@ export default async function OgImage({ params }: { params: { id: string } }) {
           >
             S
           </div>
-          <div style={{ fontSize: 28, fontWeight: 600 }}>SiteScope AI</div>
+          <div style={{ display: "flex", fontSize: 28, fontWeight: 600 }}>
+            SiteScope AI
+          </div>
           <div
             style={{
+              display: "flex",
               marginLeft: "auto",
               color: "#9ca3af",
               fontSize: 20,
@@ -101,21 +107,43 @@ export default async function OgImage({ params }: { params: { id: string } }) {
                 justifyContent: "center",
               }}
             >
-              <div style={{ fontSize: 120, fontWeight: 700, lineHeight: 1 }}>
-                {score}
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 120,
+                  fontWeight: 700,
+                  lineHeight: 1,
+                }}
+              >
+                {String(score)}
               </div>
-              <div style={{ fontSize: 22, color: "#9ca3af", marginTop: 6 }}>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 22,
+                  color: "#9ca3af",
+                  marginTop: 6,
+                }}
+              >
                 / 100
               </div>
             </div>
           </div>
 
           <div
-            style={{ display: "flex", flexDirection: "column", flex: 1, gap: 8 }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              flex: 1,
+              gap: 8,
+            }}
           >
-            <div style={{ fontSize: 30, color: "#9ca3af" }}>{host}</div>
+            <div style={{ display: "flex", fontSize: 30, color: "#9ca3af" }}>
+              {host}
+            </div>
             <div
               style={{
+                display: "flex",
                 fontSize: 48,
                 fontWeight: 700,
                 lineHeight: 1.1,
@@ -123,17 +151,17 @@ export default async function OgImage({ params }: { params: { id: string } }) {
                 overflow: "hidden",
               }}
             >
-              {title.length > 120 ? title.slice(0, 117) + "…" : title}
+              {title}
             </div>
             <div
               style={{
+                display: "flex",
                 marginTop: 16,
                 fontSize: 22,
                 color: "#d1d5db",
               }}
             >
-              AI-powered audit · SEO, performance, accessibility, conversion,
-              content
+              {tagline}
             </div>
           </div>
         </div>
@@ -148,8 +176,8 @@ export default async function OgImage({ params }: { params: { id: string } }) {
             fontSize: 18,
           }}
         >
-          <div>Audited with SiteScope AI</div>
-          <div>sitescope-ai-kappa.vercel.app</div>
+          <div style={{ display: "flex" }}>Audited with SiteScope AI</div>
+          <div style={{ display: "flex" }}>sitescope-ai-kappa.vercel.app</div>
         </div>
       </div>
     ),
