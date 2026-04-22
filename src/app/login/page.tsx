@@ -95,7 +95,11 @@ function LoginInner() {
           <div className="flex items-center gap-2 mb-6">
             <button
               type="button"
-              onClick={() => setMode("signin")}
+              onClick={() => {
+                setMode("signin");
+                setConfirmSent(false);
+                setResetSent(false);
+              }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
                 mode === "signin"
                   ? "bg-white/10 text-white"
@@ -106,7 +110,11 @@ function LoginInner() {
             </button>
             <button
               type="button"
-              onClick={() => setMode("signup")}
+              onClick={() => {
+                setMode("signup");
+                setConfirmSent(false);
+                setResetSent(false);
+              }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
                 mode === "signup"
                   ? "bg-white/10 text-white"
