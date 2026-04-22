@@ -3,6 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import { getBrowserSupabase } from "@/lib/supabase";
+import { safePath } from "@/lib/safePath";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
@@ -29,7 +30,7 @@ function Inner() {
         setError("Auth is not configured on this deployment.");
         return;
       }
-      const next = params.get("next") || "/dashboard";
+      const next = safePath(params.get("next"));
       const code = params.get("code");
       const errDesc =
         params.get("error_description") || params.get("error") || null;

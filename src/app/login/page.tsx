@@ -6,13 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import { safePath } from "@/lib/safePath";
 
 type Mode = "signin" | "signup";
 
 function LoginInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const nextPath = params.get("next") || "/dashboard";
+  const nextPath = safePath(params.get("next"));
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
