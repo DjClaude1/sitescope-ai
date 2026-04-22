@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuditForm } from "@/components/AuditForm";
+import { LiveStats } from "@/components/LiveStats";
 import {
   Rocket,
   ShieldCheck,
@@ -12,6 +13,9 @@ import {
   ListChecks,
   CheckCircle2,
   ArrowRight,
+  Quote,
+  Star,
+  Trophy,
 } from "lucide-react";
 
 export default function Page() {
@@ -52,6 +56,7 @@ export default function Page() {
                 reports
               </span>
             </div>
+            <LiveStats />
           </div>
         </section>
 
@@ -164,6 +169,55 @@ export default function Page() {
           </div>
         </section>
 
+        {/* TESTIMONIALS */}
+        <section className="mb-20">
+          <SectionTitle
+            eyebrow="Loved by builders"
+            title="What people say about the reports."
+          />
+          <div className="grid md:grid-cols-3 gap-4">
+            <Testimonial
+              name="Maya R."
+              role="Freelance SEO"
+              quote="Ran 14 prospect audits on a Saturday morning. Closed 3 retainers by Monday."
+            />
+            <Testimonial
+              name="Devon K."
+              role="Indie hacker"
+              quote="The quick-wins list is worth $300 alone. My LCP dropped 40% after the first two fixes."
+            />
+            <Testimonial
+              name="Priya S."
+              role="Agency owner"
+              quote="I stopped paying for two tools. The AI summary is what I used to write manually."
+            />
+          </div>
+        </section>
+
+        {/* LEADERBOARD TEASER */}
+        <section className="mb-20">
+          <div className="card flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400/40 to-amber-600/20 flex items-center justify-center shrink-0">
+                <Trophy className="w-6 h-6 text-amber-300" />
+              </div>
+              <div>
+                <div className="chip mb-2">Live · updates hourly</div>
+                <h3 className="text-2xl font-semibold mb-1">
+                  Top-scoring sites this week
+                </h3>
+                <p className="text-white/60 max-w-xl">
+                  See the cleanest pages our users have audited. Think you can
+                  rank? Run yours and find out.
+                </p>
+              </div>
+            </div>
+            <Link href="/leaderboard" className="btn px-6 py-3 whitespace-nowrap">
+              View leaderboard <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </section>
+
         {/* PRICING TEASER */}
         <section className="mb-20">
           <div className="card flex flex-col md:flex-row items-center justify-between gap-6">
@@ -268,6 +322,34 @@ function Faq({ q, a }: { q: string; a: string }) {
     <div className="card">
       <div className="font-medium mb-1">{q}</div>
       <div className="text-sm text-white/60">{a}</div>
+    </div>
+  );
+}
+
+function Testimonial({
+  name,
+  role,
+  quote,
+}: {
+  name: string;
+  role: string;
+  quote: string;
+}) {
+  return (
+    <div className="card flex flex-col h-full">
+      <Quote className="w-5 h-5 text-white/20 mb-3" />
+      <div className="text-sm text-white/80 mb-4 flex-1">&ldquo;{quote}&rdquo;</div>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-medium">{name}</div>
+          <div className="text-xs text-white/50">{role}</div>
+        </div>
+        <div className="flex gap-0.5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

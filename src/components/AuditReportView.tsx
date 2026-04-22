@@ -10,7 +10,21 @@ import {
   Info,
   Check,
   Share2,
+  Code2,
 } from "lucide-react";
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      aria-hidden
+      fill="currentColor"
+    >
+      <path d="M18.244 2H21l-6.525 7.455L22 22h-6.828l-4.77-6.24L4.8 22H2l7-8.004L2 2h6.996l4.31 5.693L18.244 2Zm-2.394 18h1.846L7.24 4H5.287L15.85 20Z" />
+    </svg>
+  );
+}
 import { ScoreRing } from "./ScoreRing";
 import type { AuditCategoryKey, AuditIssue, AuditReport } from "@/lib/types";
 
@@ -65,6 +79,26 @@ export function AuditReportView({ report }: { report: AuditReport }) {
     toast.success("Link copied");
   }
 
+  function tweet() {
+    const url = `${window.location.origin}/audit/${report.id}`;
+    const host = safeHost(report.finalUrl);
+    const text = `I just audited ${host} with SiteScope AI — scored ${report.overallScore}/100`;
+    const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(intent, "_blank", "noopener,noreferrer");
+  }
+
+  async function copyEmbed() {
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://sitescope-ai-kappa.vercel.app";
+    const badgeUrl = `${origin}/api/badge/${report.id}`;
+    const reportUrl = `${origin}/audit/${report.id}`;
+    const snippet = `<a href="${reportUrl}" target="_blank" rel="noopener"><img src="${badgeUrl}" alt="SiteScope AI score" height="44" /></a>`;
+    await navigator.clipboard.writeText(snippet);
+    toast.success("Embed snippet copied");
+  }
+
   const groupedIssues = groupBy(report.issues, (i) => i.category);
   const orderedCategories = (Object.keys(groupedIssues) as AuditCategoryKey[]);
 
@@ -90,6 +124,12 @@ export function AuditReportView({ report }: { report: AuditReport }) {
         <div className="flex flex-wrap gap-2">
           <button onClick={copyLink} className="btn btn-ghost text-sm">
             <Share2 className="w-4 h-4" /> Share link
+          </button>
+          <button onClick={tweet} className="btn btn-ghost text-sm">
+            <XIcon className="w-4 h-4" /> Post on X
+          </button>
+          <button onClick={copyEmbed} className="btn btn-ghost text-sm">
+            <Code2 className="w-4 h-4" /> Embed badge
           </button>
           <button onClick={exportPdf} className="btn btn-primary text-sm">
             <Download className="w-4 h-4" /> Export PDF
@@ -301,4 +341,12 @@ function groupBy<T, K extends string>(
     out[k].push(item);
   }
   return out;
+}
+
+function safeHost(u: string): string {
+  try {
+    return new URL(u).hostname.replace(/^www\./, "");
+  } catch {
+    return u;
+  }
 }
