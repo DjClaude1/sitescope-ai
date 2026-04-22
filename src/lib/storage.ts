@@ -136,28 +136,15 @@ export async function incrementUsage(identifier: {
   const sb = getAdminSupabase();
   if (!sb) return;
   const day = new Date().toISOString().slice(0, 10);
-  const row = {
-    user_id: identifier.userId ?? null,
-    ip: identifier.ip,
-    day,
-    count: 1,
-  };
-  // naive upsert: try insert, fall back to rpc increment via a fetch pattern.
-  const { data: existing } = await sb
-    .from("usage")
-    .select("id,count")
-    .match(
-      identifier.userId
-        ? { user_id: identifier.userId, day }
-        : { ip: identifier.ip, day, user_id: null }
-    )
-    .maybeSingle();
-  if (existing) {
-    await sb
-      .from("usage")
-      .update({ count: existing.count + 1 })
-      .eq("id", existing.id);
-  } else {
-    await sb.from("usage").insert(row);
+
+  // Atomic increment via Postgres function defined in supabase/schema.sql.
+  // This is race-safe: concurrent calls each produce a distinct +1 increment.
+  const { error } = await sb.rpc("increment_usage", {
+    p_user_id: identifier.userId ?? null,
+    p_ip: identifier.ip,
+    p_day: day,
+  });
+  if (error) {
+    console.error("[storage] increment_usage rpc failed", error);
   }
 }

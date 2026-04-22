@@ -61,6 +61,29 @@ create unique index if not exists usage_user_day_idx
 create unique index if not exists usage_ip_day_idx
   on public.usage (ip, day) where user_id is null;
 
+-- Atomic daily-counter increment. Safe under concurrent calls because the
+-- INSERT ... ON CONFLICT DO UPDATE expression is evaluated atomically by
+-- Postgres against the conflicting row.
+create or replace function public.increment_usage(
+  p_user_id uuid,
+  p_ip text,
+  p_day date
+) returns void as $$
+begin
+  if p_user_id is not null then
+    insert into public.usage (user_id, ip, day, count)
+    values (p_user_id, p_ip, p_day, 1)
+    on conflict (user_id, day) where user_id is not null
+    do update set count = public.usage.count + 1;
+  else
+    insert into public.usage (user_id, ip, day, count)
+    values (null, p_ip, p_day, 1)
+    on conflict (ip, day) where user_id is null
+    do update set count = public.usage.count + 1;
+  end if;
+end;
+$$ language plpgsql security definer;
+
 -- =====================================================================
 -- Monitors (Pro: weekly re-audit + email)
 -- =====================================================================

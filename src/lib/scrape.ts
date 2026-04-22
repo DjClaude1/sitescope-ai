@@ -41,8 +41,8 @@ export async function scrape(url: string): Promise<ScrapeResult> {
       const { done, value } = await reader.read();
       if (done) break;
       if (value) {
+        if (bytes + value.byteLength > MAX_BYTES) break;
         bytes += value.byteLength;
-        if (bytes > MAX_BYTES) break;
         chunks.push(value);
       }
     }
