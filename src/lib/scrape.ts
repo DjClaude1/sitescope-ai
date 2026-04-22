@@ -44,12 +44,15 @@ export async function scrape(url: string): Promise<ScrapeResult> {
       });
       if (r.status >= 300 && r.status < 400) {
         const loc = r.headers.get("location");
-        // Drain the redirect body so the connection can be reused.
-        r.body?.cancel().catch(() => {});
         if (!loc) {
+          // No Location header — treat the 3xx as the final response and
+          // let the body reader below decode whatever the server sent.
+          // Do NOT cancel the body here; the reader needs it.
           res = r;
           break;
         }
+        // Real redirect — drain the body so the connection can be reused.
+        r.body?.cancel().catch(() => {});
         if (hop === MAX_REDIRECTS) {
           throw new Error("Too many redirects");
         }
