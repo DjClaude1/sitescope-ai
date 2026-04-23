@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuditForm } from "@/components/AuditForm";
-import { LiveStats } from "@/components/LiveStats";
 import {
   Rocket,
   ShieldCheck,
@@ -15,7 +14,6 @@ import {
   ArrowRight,
   Quote,
   Star,
-  Trophy,
 } from "lucide-react";
 
 export default function Page() {
@@ -37,8 +35,7 @@ export default function Page() {
           </h1>
           <p className="text-lg text-white/70 max-w-2xl mx-auto mb-10">
             SiteScope AI scans SEO, performance, accessibility, conversion and content —
-            then writes the fixes a senior consultant would charge $500+ for. Built on
-            Gemini. Deploy on Vercel free tier.
+            then writes the fixes a senior consultant would charge $500+ for.
           </p>
           <div id="run" className="max-w-2xl mx-auto">
             <AuditForm />
@@ -56,7 +53,6 @@ export default function Page() {
                 reports
               </span>
             </div>
-            <LiveStats />
           </div>
         </section>
 
@@ -191,30 +187,6 @@ export default function Page() {
               role="Agency owner"
               quote="I stopped paying for two tools. The AI summary is what I used to write manually."
             />
-          </div>
-        </section>
-
-        {/* LEADERBOARD TEASER */}
-        <section className="mb-20">
-          <div className="card flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400/40 to-amber-600/20 flex items-center justify-center shrink-0">
-                <Trophy className="w-6 h-6 text-amber-300" />
-              </div>
-              <div>
-                <div className="chip mb-2">Live · updates hourly</div>
-                <h3 className="text-2xl font-semibold mb-1">
-                  Top-scoring sites this week
-                </h3>
-                <p className="text-white/60 max-w-xl">
-                  See the cleanest pages our users have audited. Think you can
-                  rank? Run yours and find out.
-                </p>
-              </div>
-            </div>
-            <Link href="/leaderboard" className="btn px-6 py-3 whitespace-nowrap">
-              View leaderboard <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
         </section>
 

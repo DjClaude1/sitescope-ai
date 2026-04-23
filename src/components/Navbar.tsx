@@ -30,12 +30,6 @@ export function Navbar() {
           SiteScope <span className="text-brand-2">AI</span>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2 text-sm">
-          <Link
-            href="/leaderboard"
-            className="btn btn-ghost px-3 py-1.5 text-sm hidden sm:inline-flex"
-          >
-            Leaderboard
-          </Link>
           <Link href="/pricing" className="btn btn-ghost px-3 py-1.5 text-sm">
             Pricing
           </Link>
