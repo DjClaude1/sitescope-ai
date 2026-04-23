@@ -153,6 +153,36 @@ export async function listTopPublicAudits(
   }));
 }
 
+// Find the most recent public audit for a given hostname (no scheme, no
+// "www."). Used by /compare/[a]/[b] to avoid re-running audits when a
+// fresh one already exists. `maxAgeDays` bounds how stale a cached audit
+// is allowed to be (default 7 days).
+export async function findRecentAuditByHost(
+  host: string,
+  maxAgeDays = 7
+): Promise<AuditReport | null> {
+  if (!isSupabaseConfigured) return null;
+  const sb = getAdminSupabase();
+  if (!sb) return null;
+  const normalized = host.replace(/^www\./, "").toLowerCase();
+  const since = new Date(
+    Date.now() - maxAgeDays * 24 * 60 * 60 * 1000
+  ).toISOString();
+  // Match either host.com or www.host.com via two ilike patterns.
+  const { data } = await sb
+    .from("audits")
+    .select("report, created_at")
+    .or(
+      `final_url.ilike.%//${normalized}/%,final_url.ilike.%//${normalized},final_url.ilike.%//www.${normalized}/%,final_url.ilike.%//www.${normalized}`
+    )
+    .eq("is_public", true)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const row = data?.[0];
+  return (row?.report as AuditReport | undefined) ?? null;
+}
+
 export async function countAudits(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
   const sb = getAdminSupabase();
