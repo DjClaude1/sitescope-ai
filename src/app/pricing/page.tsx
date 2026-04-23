@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, Loader2 } from "lucide-react";
+import { Check, CreditCard, Loader2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
@@ -11,9 +11,13 @@ import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
 const PAYPAL_PLAN_ID = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID || "";
+const STRIPE_ENABLED =
+  (process.env.NEXT_PUBLIC_STRIPE_ENABLED || "").toLowerCase() === "true" ||
+  process.env.NEXT_PUBLIC_STRIPE_ENABLED === "1";
 
 export default function PricingPage() {
   const [loading, setLoading] = useState(false);
+  const [stripeLoading, setStripeLoading] = useState(false);
 
   async function handleServerCheckout() {
     setLoading(true);
@@ -32,6 +36,36 @@ export default function PricingPage() {
       toast.error(e instanceof Error ? e.message : "Checkout failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleStripeCheckout() {
+    setStripeLoading(true);
+    try {
+      // Forward the Supabase session token so the server-side webhook
+      // can attribute the subscription to the signed-in user.
+      const sb = isSupabaseConfigured ? getBrowserSupabase() : null;
+      const { data: sessionData } = sb
+        ? await sb.auth.getSession()
+        : { data: null };
+      const token = sessionData?.session?.access_token;
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.code === "STRIPE_NOT_CONFIGURED") {
+          toast.error("Stripe not configured yet.");
+          return;
+        }
+        throw new Error(data.error || "Checkout failed");
+      }
+      if (data.url) window.location.href = data.url;
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Checkout failed");
+    } finally {
+      setStripeLoading(false);
     }
   }
 
@@ -70,7 +104,14 @@ export default function PricingPage() {
           <div className="card relative border border-brand/40 glow">
             <div className="chip mb-3">Pro · most popular</div>
             <div className="text-4xl font-semibold mb-1">$19<span className="text-lg text-white/40">/mo</span></div>
-            <div className="text-white/50 mb-6">cancel anytime · PayPal billing</div>
+            <div className="text-white/50 mb-6">
+              cancel anytime ·{" "}
+              {STRIPE_ENABLED && PAYPAL_CLIENT_ID
+                ? "PayPal or card"
+                : STRIPE_ENABLED
+                  ? "card billing"
+                  : "PayPal billing"}
+            </div>
             <ul className="space-y-2 text-sm text-white/80 mb-8">
               <Li>Unlimited audits</Li>
               <Li>Branded PDF export</Li>
@@ -132,10 +173,36 @@ export default function PricingPage() {
                 )}
               </button>
             )}
-            {!(PAYPAL_CLIENT_ID && PAYPAL_PLAN_ID) && (
+            {STRIPE_ENABLED && (
+              <>
+                {PAYPAL_CLIENT_ID && PAYPAL_PLAN_ID && (
+                  <div className="flex items-center gap-3 my-3 text-xs text-white/40">
+                    <div className="flex-1 h-px bg-white/10" />
+                    or
+                    <div className="flex-1 h-px bg-white/10" />
+                  </div>
+                )}
+                <button
+                  onClick={handleStripeCheckout}
+                  disabled={stripeLoading}
+                  className="btn btn-ghost w-full border border-white/15"
+                >
+                  {stripeLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Redirecting…
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4" /> Pay with card (Stripe)
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+            {!(PAYPAL_CLIENT_ID && PAYPAL_PLAN_ID) && !STRIPE_ENABLED && (
               <p className="mt-3 text-xs text-white/40 text-center">
-                PayPal not yet configured — set NEXT_PUBLIC_PAYPAL_CLIENT_ID and
-                NEXT_PUBLIC_PAYPAL_PLAN_ID to enable subscriptions.
+                Billing not yet configured — set PayPal or Stripe env vars to
+                enable subscriptions.
               </p>
             )}
           </div>

@@ -9,9 +9,15 @@ create table if not exists public.profiles (
   email text unique,
   plan text not null default 'free' check (plan in ('free','pro')),
   paypal_subscription_id text,
+  stripe_customer_id text,
+  stripe_subscription_id text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Idempotent migrations for projects created before Stripe columns existed.
+alter table public.profiles add column if not exists stripe_customer_id text;
+alter table public.profiles add column if not exists stripe_subscription_id text;
 
 -- Keep email in sync with auth.users
 create or replace function public.handle_new_user()
