@@ -8,6 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuditForm } from "@/components/AuditForm";
 import { ScoreRing } from "@/components/ScoreRing";
+import { MonitorsPanel } from "@/components/MonitorsPanel";
 import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { AuditReport } from "@/lib/types";
 
@@ -133,6 +134,8 @@ function DashboardInner() {
               </div>
               <AuditForm compact />
             </div>
+
+            <MonitorsPanel plan={plan} />
 
             <h2 className="text-sm uppercase tracking-widest text-white/40 mb-3">
               Recent audits
