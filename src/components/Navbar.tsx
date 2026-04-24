@@ -31,6 +31,12 @@ export function Navbar() {
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2 text-sm">
           <Link
+            href="/top"
+            className="btn btn-ghost px-3 py-1.5 text-sm hidden sm:inline-flex"
+          >
+            Top sites
+          </Link>
+          <Link
             href="/compare"
             className="btn btn-ghost px-3 py-1.5 text-sm hidden sm:inline-flex"
           >

@@ -25,6 +25,16 @@ export function AuditForm({ compact }: { compact?: boolean }) {
   const router = useRouter();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Pre-fill the URL from `?url=...` so links from /top/[niche] and embedded
+  // share buttons can hand the user a one-click starting point. Reading
+  // window.location directly avoids pulling in useSearchParams, which would
+  // force this whole page out of static prerendering.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = new URL(window.location.href).searchParams.get("url");
+    if (raw) setUrl(raw.slice(0, 500));
+  }, []);
+
   // Cycle through the stage labels roughly every 4s while an audit is
   // running. We stop one short of the last stage so it never looks "done"
   // until the real response lands.
