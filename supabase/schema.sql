@@ -163,12 +163,29 @@ create table if not exists public.monitors (
 create index if not exists monitors_user_id_idx on public.monitors (user_id);
 
 -- =====================================================================
+-- CRO Leak Analyses (Pro-tier "premium consulting" reports)
+-- =====================================================================
+create table if not exists public.cro_analyses (
+  id uuid primary key,
+  user_id uuid references auth.users(id) on delete set null,
+  url text not null,
+  final_url text,
+  overall_score int,
+  report jsonb not null,
+  is_public boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create index if not exists cro_analyses_user_id_idx on public.cro_analyses (user_id);
+create index if not exists cro_analyses_created_at_idx on public.cro_analyses (created_at desc);
+
+-- =====================================================================
 -- Row level security
 -- =====================================================================
 alter table public.profiles enable row level security;
 alter table public.audits enable row level security;
 alter table public.usage enable row level security;
 alter table public.monitors enable row level security;
+alter table public.cro_analyses enable row level security;
 
 -- Profiles: user reads/updates their own row
 drop policy if exists "profiles self read" on public.profiles;
@@ -195,4 +212,13 @@ create policy "usage self" on public.usage
 
 drop policy if exists "monitors self" on public.monitors;
 create policy "monitors self" on public.monitors
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- CRO analyses: same model as audits (public read by id, owner all)
+drop policy if exists "cro public read" on public.cro_analyses;
+create policy "cro public read" on public.cro_analyses
+  for select using (is_public = true);
+
+drop policy if exists "cro owner all" on public.cro_analyses;
+create policy "cro owner all" on public.cro_analyses
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

@@ -42,6 +42,12 @@ export function Navbar() {
           >
             Compare
           </Link>
+          <Link
+            href="/cro"
+            className="btn btn-ghost px-3 py-1.5 text-sm hidden md:inline-flex text-amber-200"
+          >
+            CRO
+          </Link>
           <Link href="/pricing" className="btn btn-ghost px-3 py-1.5 text-sm">
             Pricing
           </Link>

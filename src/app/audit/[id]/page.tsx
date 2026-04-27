@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Crown } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuditReportView } from "@/components/AuditReportView";
@@ -81,12 +83,42 @@ export default async function AuditPage({
       <Navbar />
       <main className="max-w-6xl mx-auto px-5 py-10">
         {report ? (
-          <AuditReportView report={report} />
+          <>
+            <AuditReportView report={report} />
+            <CROCrossSell url={report.finalUrl || report.url} />
+          </>
         ) : (
           <ClientFallback id={params.id} />
         )}
       </main>
       <Footer />
     </>
+  );
+}
+
+function CROCrossSell({ url }: { url: string }) {
+  const target = `/cro?url=${encodeURIComponent(url)}`;
+  return (
+    <section className="mt-10">
+      <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-rose-500/5 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-5">
+        <div className="flex-1">
+          <div className="text-xs uppercase tracking-widest text-amber-300 inline-flex items-center gap-1.5 mb-2">
+            <Crown className="w-3.5 h-3.5" /> Pro · CRO leak analysis
+          </div>
+          <h3 className="text-xl md:text-2xl font-semibold mb-1">
+            What&apos;s actually costing this site revenue?
+          </h3>
+          <p className="text-sm text-white/70 max-w-2xl">
+            The technical audit above tells you what&apos;s <em>broken</em>. Run a
+            CRO leak analysis to find what&apos;s <em>losing money</em> — weak value
+            prop, missing CTAs, trust gaps — with concrete fixes, A/B test
+            ideas, and revenue-impact estimates.
+          </p>
+        </div>
+        <Link href={target} className="btn btn-primary whitespace-nowrap">
+          Run CRO analysis
+        </Link>
+      </div>
+    </section>
   );
 }

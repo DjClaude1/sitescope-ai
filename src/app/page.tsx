@@ -190,13 +190,36 @@ export default function Page() {
           </div>
         </section>
 
+        {/* CRO LEAK ANALYSIS TEASER */}
+        <section className="mb-20">
+          <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-rose-500/5 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-amber-300 inline-flex items-center gap-1.5 mb-2">
+                <Star className="w-3.5 h-3.5" /> Pro · senior-CRO-consultant analysis
+              </div>
+              <h3 className="text-2xl font-semibold mb-2">
+                What&apos;s actually costing you revenue?
+              </h3>
+              <p className="text-white/65 max-w-2xl">
+                The standard audit tells you what&apos;s <em>broken</em>. CRO leak
+                analysis tells you what&apos;s <em>losing money</em> — weak value prop,
+                missing CTAs, trust gaps — with concrete fixes, A/B test ideas,
+                and revenue-impact estimates.
+              </p>
+            </div>
+            <Link href="/cro" className="btn btn-primary px-6 py-3 whitespace-nowrap">
+              Run CRO analysis <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </section>
+
         {/* PRICING TEASER */}
         <section className="mb-20">
           <div className="card flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <div className="chip mb-3">Pro · $19/mo</div>
               <h3 className="text-2xl font-semibold mb-2">
-                Unlimited audits, PDF export, weekly monitoring.
+                Unlimited audits, CRO analysis, PDF export, weekly monitoring.
               </h3>
               <p className="text-white/60 max-w-xl">
                 Agencies recoup Pro after closing a single client. Cancel anytime.
