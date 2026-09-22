@@ -1,181 +1,25 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
-import { Crown, LogOut, Plus } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { AuditForm } from "@/components/AuditForm";
-import { ScoreRing } from "@/components/ScoreRing";
-import { MonitorsPanel } from "@/components/MonitorsPanel";
-import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/supabase";
-import type { AuditReport } from "@/lib/types";
-
-export const dynamic = "force-dynamic";
-
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={null}>
-      <DashboardInner />
-    </Suspense>
-  );
-}
-
-function DashboardInner() {
-  const router = useRouter();
-  const search = useSearchParams();
-  const [email, setEmail] = useState<string | null>(null);
-  const [plan, setPlan] = useState<"free" | "pro">("free");
-  const [audits, setAudits] = useState<AuditReport[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (search.get("upgraded") === "1") {
-      toast.success("Welcome to Pro!");
-    }
-  }, [search]);
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
-    const sb = getBrowserSupabase();
-    if (!sb) return;
-    (async () => {
-      const { data: sess } = await sb.auth.getSession();
-      if (!sess.session) {
-        router.replace("/login");
-        return;
-      }
-      const user = sess.session.user;
-      setEmail(user.email || null);
-
-      const { data: profile } = await sb
-        .from("profiles")
-        .select("plan")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (profile?.plan === "pro") setPlan("pro");
-
-      const { data: rows } = await sb
-        .from("audits")
-        .select("report")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      setAudits(((rows ?? []).map((r) => r.report) as AuditReport[]) || []);
-      setLoading(false);
-    })();
-  }, [router]);
-
-  async function signOut() {
-    const sb = getBrowserSupabase();
-    if (!sb) return;
-    await sb.auth.signOut();
-    router.push("/");
-  }
-
-  return (
-    <>
-      <Navbar />
-      <main className="max-w-6xl mx-auto px-5 py-10">
-        {!isSupabaseConfigured ? (
-          <div className="card text-center py-14">
-            <div className="text-xl font-semibold mb-2">
-              Dashboard needs auth
-            </div>
-            <p className="text-white/60 max-w-md mx-auto mb-6">
-              Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to
-              enable user accounts and audit history.
-            </p>
-            <Link href="/" className="btn btn-primary">
-              Back to home
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <div>
-                <div className="text-xs uppercase tracking-widest text-white/40 mb-1">
-                  Dashboard
-                </div>
-                <h1 className="text-2xl md:text-3xl font-semibold">
-                  {email || "Your workspace"}
-                </h1>
-                <div className="mt-2 flex items-center gap-2">
-                  <span
-                    className={`chip ${plan === "pro" ? "text-amber-300 border-amber-500/30 bg-amber-500/10" : ""}`}
-                  >
-                    {plan === "pro" ? (
-                      <>
-                        <Crown className="w-3 h-3" /> Pro
-                      </>
-                    ) : (
-                      "Free"
-                    )}
-                  </span>
-                  {plan !== "pro" && (
-                    <Link href="/pricing" className="text-xs text-brand-2 hover:underline">
-                      Upgrade
-                    </Link>
-                  )}
-                </div>
-              </div>
-              <button onClick={signOut} className="btn btn-ghost text-sm">
-                <LogOut className="w-4 h-4" /> Sign out
-              </button>
-            </div>
-
-            <div className="card mb-8">
-              <div className="flex items-center gap-2 mb-3 text-sm text-white/60">
-                <Plus className="w-4 h-4" /> New audit
-              </div>
-              <AuditForm compact />
-            </div>
-
-            <MonitorsPanel plan={plan} />
-
-            <h2 className="text-sm uppercase tracking-widest text-white/40 mb-3">
-              Recent audits
-            </h2>
-            {loading ? (
-              <div className="text-white/50">Loading…</div>
-            ) : audits.length === 0 ? (
-              <div className="card text-center py-12 text-white/60">
-                No audits yet. Paste a URL above to get started.
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {audits.map((a) => (
-                  <Link
-                    key={a.id}
-                    href={`/audit/${a.id}`}
-                    className="card hover:border-brand/40 transition"
-                  >
-                    <div className="flex items-center gap-4">
-                      <ScoreRing value={a.overallScore} size={60} />
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">
-                          {a.title || a.finalUrl}
-                        </div>
-                        <div className="text-xs text-white/50 truncate">
-                          {a.finalUrl}
-                        </div>
-                        <div className="text-xs text-white/40 mt-0.5">
-                          {new Date(a.fetchedAt).toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </main>
-      <Footer />
-    </>
-  );
+import { useEffect,useMemo,useState } from "react";
+import { useRouter } from "next/navigation";
+import { LogOut,Mail,MessageSquare,Search,Users,Wallet,ExternalLink,Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase-browser";
+type P={id:string;business:string;website:string|null;industry:string|null;phone:string|null;email:string|null;whatsapp:string|null;audit_status:string;observations:any[];outreach_message:string|null;contacted_at:string|null;follow_up_at:string|null;deal_value:number|null;customer_status:string;created_at:string};
+type L={id:number;business:string;website:string;email:string|null;whatsapp:string|null;problem:string;created_at:string};
+const stages=["prospect","audited","contacted","reply","interested","won","lost"];
+export default function Dashboard(){
+ const router=useRouter();const[p,setP]=useState<P[]>([]);const[l,setL]=useState<L[]>([]);const[tab,setTab]=useState("Overview");const[q,setQ]=useState("");const[loading,setLoading]=useState(true);const[email,setEmail]=useState("");
+ useEffect(()=>{(async()=>{const{data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/login");return}setEmail(user.email||"");const[a,b]=await Promise.all([supabase.from("prospects").select("*").order("created_at",{ascending:false}),supabase.from("lead_submissions").select("*").order("created_at",{ascending:false})]);setP((a.data||[])as P[]);setL((b.data||[])as L[]);setLoading(false)})()},[router]);
+ const filtered=useMemo(()=>p.filter(x=>[x.business,x.industry,x.email,x.website].join(" ").toLowerCase().includes(q.toLowerCase())),[p,q]);
+ const revenue=p.reduce((s,x)=>s+(Number(x.deal_value)||0),0);
+ async function update(id:string,status:string){await supabase.from("prospects").update({customer_status:status}).eq("id",id);setP(x=>x.map(v=>v.id===id?{...v,customer_status:status}:v))}
+ async function out(){await supabase.auth.signOut();router.replace("/login")}
+ if(loading)return <main className="min-h-screen bg-[#07090d] grid place-items-center text-white"><Loader2 className="animate-spin text-cyan-300"/></main>;
+ const card=(label:string,value:any,Icon:any)=><div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><Icon size={18} className="text-cyan-300"/><div className="mt-4 text-sm text-white/45">{label}</div><div className="mt-1 text-3xl font-black">{value}</div></div>;
+ return <main className="min-h-screen bg-[#07090d] text-white"><header className="border-b border-white/10"><div className="mx-auto max-w-7xl flex items-center justify-between px-5 py-5"><div><div className="text-xl font-black">LeadFix<span className="text-cyan-400">.AI</span> <span className="text-white/30">/ Admin</span></div><div className="text-xs text-white/40">{email}</div></div><button onClick={out} className="flex gap-2 items-center rounded-lg border border-white/10 px-3 py-2 text-sm"><LogOut size={16}/>Sign out</button></div></header>
+ <div className="mx-auto max-w-7xl px-5 py-7"><div className="flex flex-wrap gap-2 mb-7">{["Overview","Prospects","Leads","Messages"].map(x=><button key={x} onClick={()=>setTab(x)} className={`rounded-xl px-4 py-2 text-sm font-semibold ${tab===x?"bg-cyan-400 text-black":"border border-white/10"}`}>{x}</button>)}</div>
+ {tab==="Overview"&&<><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{card("Prospects",p.length,Users)}{card("Audited",p.filter(x=>x.audit_status==="audited").length,Search)}{card("Contacted",p.filter(x=>x.contacted_at||x.customer_status==="contacted").length,MessageSquare)}{card("Pipeline",`R${revenue.toLocaleString()}`,Wallet)}{card("Inbound leads",l.length,Mail)}</div><div className="mt-6 grid gap-4 lg:grid-cols-2"><div className="rounded-2xl border border-white/10 bg-white/[.03] p-6"><h2 className="font-bold">Pipeline</h2><div className="mt-4 space-y-2">{stages.map(s=><div key={s} className="flex justify-between border-b border-white/5 py-2 text-sm"><span className="capitalize text-white/55">{s}</span><b>{p.filter(x=>x.customer_status===s).length}</b></div>)}</div></div><div className="rounded-2xl border border-white/10 bg-white/[.03] p-6"><h2 className="font-bold">Recent leads</h2><div className="mt-4 space-y-2">{l.slice(0,6).map(x=><div key={x.id} className="rounded-xl bg-white/[.03] p-3"><b>{x.business}</b><div className="text-xs text-white/40">{x.email||x.whatsapp||"No contact"}</div></div>)}</div></div></div></>}
+ {tab==="Prospects"&&<section><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search prospects..." className="mb-4 w-full max-w-md rounded-xl border border-white/10 bg-white/5 px-4 py-3"/><div className="grid gap-4">{filtered.map(x=><div key={x.id} className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><div className="flex flex-wrap justify-between gap-3"><div><h3 className="font-bold text-lg">{x.business}</h3><div className="text-sm text-white/45">{x.industry||"Business"} • {x.email||x.phone||"No email"}</div></div><select value={x.customer_status} onChange={e=>update(x.id,e.target.value)} className="rounded-lg border border-white/10 bg-[#10141c] px-3 py-2 text-sm">{stages.map(s=><option key={s}>{s}</option>)}</select></div>{x.website&&<a href={x.website} target="_blank" className="mt-3 inline-flex gap-1 text-sm text-cyan-300">{x.website}<ExternalLink size={13}/></a>}<div className="mt-4 grid gap-4 md:grid-cols-2"><div><b className="text-xs text-cyan-300">AUDIT FINDINGS</b><ul className="mt-2 space-y-1 text-sm text-white/65">{(x.observations||[]).map((o:any,i:number)=><li key={i}>• {typeof o==="string"?o:o?.text||JSON.stringify(o)}</li>)}</ul></div><div><b className="text-xs text-cyan-300">OUTREACH</b><p className="mt-2 whitespace-pre-line text-sm text-white/65">{x.outreach_message||"No message saved."}</p></div></div></div>)}</div></section>}
+ {tab==="Leads"&&<section className="space-y-3">{l.map(x=><div key={x.id} className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><div className="flex justify-between"><b>{x.business}</b><span className="text-xs text-white/35">{new Date(x.created_at).toLocaleString()}</span></div><a href={x.website} target="_blank" className="text-sm text-cyan-300">{x.website}</a><p className="mt-3 text-sm text-white/60">{x.problem}</p><div className="mt-2 text-xs text-white/40">{x.email||"No email"}{x.whatsapp&&` • ${x.whatsapp}`}</div></div>)}</section>}
+ {tab==="Messages"&&<section className="space-y-3">{p.filter(x=>x.outreach_message).map(x=><div key={x.id} className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><div className="flex justify-between"><b>{x.business}</b><span className="text-xs text-white/40">{x.customer_status}</span></div><p className="mt-3 whitespace-pre-line text-sm text-white/65">{x.outreach_message}</p></div>)}</section>}
+ </div></main>
 }
