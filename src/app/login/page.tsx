@@ -1,226 +1,26 @@
 "use client";
-import { useState, Suspense } from "react";
-import { toast } from "sonner";
-import { Loader2, Lock, Mail } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/supabase";
-import { safePath } from "@/lib/safePath";
-
-type Mode = "signin" | "signup";
-
-function LoginInner() {
-  const router = useRouter();
-  const params = useSearchParams();
-  const nextPath = safePath(params.get("next"));
-  const [mode, setMode] = useState<Mode>("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [confirmSent, setConfirmSent] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!isSupabaseConfigured) {
-      toast.error("Auth is not configured. Set NEXT_PUBLIC_SUPABASE_* env vars.");
-      return;
-    }
-    const sb = getBrowserSupabase();
-    if (!sb) return;
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
-      return;
-    }
-    setLoading(true);
-    try {
-      if (mode === "signup") {
-        const { data, error } = await sb.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
-          },
-        });
-        if (error) throw error;
-        // If email confirmation is enabled (default), there's no session
-        // yet — user must click the link in their inbox.
-        if (!data.session) {
-          setConfirmSent(true);
-          toast.success("Account created. Check your inbox to confirm.");
-          return;
-        }
-        toast.success("Welcome!");
-        router.replace(nextPath);
-      } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Signed in");
-        router.replace(nextPath);
-      }
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Auth failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function forgotPassword() {
-    if (!email) {
-      toast.error("Enter your email above first.");
-      return;
-    }
-    const sb = getBrowserSupabase();
-    if (!sb) return;
-    setLoading(true);
-    try {
-      const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/account/password`,
-      });
-      if (error) throw error;
-      setResetSent(true);
-      toast.success("Password reset email sent.");
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Reset failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <>
-      <Navbar />
-      <main className="max-w-md mx-auto px-5 py-20">
-        <div className="card">
-          <div className="flex items-center gap-2 mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signin");
-                setConfirmSent(false);
-                setResetSent(false);
-              }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
-                mode === "signin"
-                  ? "bg-white/10 text-white"
-                  : "text-white/50 hover:text-white/80"
-              }`}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signup");
-                setConfirmSent(false);
-                setResetSent(false);
-              }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
-                mode === "signup"
-                  ? "bg-white/10 text-white"
-                  : "text-white/50 hover:text-white/80"
-              }`}
-            >
-              Create account
-            </button>
-          </div>
-
-          <h1 className="text-2xl font-semibold mb-1">
-            {mode === "signin" ? "Welcome back" : "Create your account"}
-          </h1>
-          <p className="text-sm text-white/60 mb-6">
-            {mode === "signin"
-              ? "Sign in to view your audit history and Pro features."
-              : "Get 3 free audits/day. Upgrade to Pro any time."}
-          </p>
-
-          {confirmSent ? (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-200">
-              Check {email} for a confirmation link. After you click it you&apos;ll
-              be redirected back here and logged in automatically.
-            </div>
-          ) : resetSent ? (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-200">
-              Password reset email sent to {email}. Click the link to set a new
-              password.
-            </div>
-          ) : (
-            <form onSubmit={submit} className="space-y-3">
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-black/30 border border-white/10">
-                <Mail className="w-4 h-4 text-white/50" />
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 bg-transparent outline-none"
-                  placeholder="you@company.com"
-                />
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-black/30 border border-white/10">
-                <Lock className="w-4 h-4 text-white/50" />
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete={
-                    mode === "signin" ? "current-password" : "new-password"
-                  }
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="flex-1 bg-transparent outline-none"
-                  placeholder={
-                    mode === "signin" ? "Your password" : "At least 8 characters"
-                  }
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary w-full"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Working…
-                  </>
-                ) : mode === "signin" ? (
-                  "Sign in"
-                ) : (
-                  "Create account"
-                )}
-              </button>
-              {mode === "signin" && (
-                <button
-                  type="button"
-                  onClick={forgotPassword}
-                  disabled={loading}
-                  className="w-full text-xs text-white/50 hover:text-white/80 pt-1"
-                >
-                  Forgot password?
-                </button>
-              )}
-            </form>
-          )}
-          {!isSupabaseConfigured && (
-            <p className="text-xs text-white/40 mt-4">
-              Supabase not configured — set NEXT_PUBLIC_SUPABASE_URL and
-              NEXT_PUBLIC_SUPABASE_ANON_KEY to enable auth. You can still run
-              audits without an account.
-            </p>
-          )}
-        </div>
-      </main>
-      <Footer />
-    </>
-  );
-}
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, LockKeyhole } from "lucide-react";
+import { supabase } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
-  return (
-    <Suspense fallback={null}>
-      <LoginInner />
-    </Suspense>
-  );
+ const router=useRouter(); const [mode,setMode]=useState<"login"|"signup">("login");
+ const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [status,setStatus]=useState(""); const [loading,setLoading]=useState(false);
+ useEffect(()=>{supabase.auth.getSession().then(({data})=>{if(data.session)router.replace("/dashboard")})},[router]);
+ async function submit(e:FormEvent){e.preventDefault();setLoading(true);setStatus("");
+ const r=mode==="login"?await supabase.auth.signInWithPassword({email,password}):await supabase.auth.signUp({email,password});
+ setLoading(false); if(r.error){setStatus(r.error.message);return}
+ if(mode==="signup"&&!r.data.session){setStatus("Account created. Check your email to confirm it, then sign in.");return}
+ router.replace("/dashboard");
+ }
+ return <main className="min-h-screen bg-[#07090d] text-white grid place-items-center px-5"><div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[.04] p-8">
+ <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300"><LockKeyhole/></div>
+ <h1 className="text-3xl font-black text-center">LeadFix Admin</h1><p className="mt-2 text-center text-sm text-white/50">Private prospects, leads and outreach.</p>
+ <form onSubmit={submit} className="mt-7 space-y-3"><input required type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Admin email" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"/>
+ <input required minLength={8} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password (8+ characters)" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none"/>
+ <button disabled={loading} className="w-full rounded-xl bg-cyan-400 px-4 py-3 font-bold text-black">{loading?<Loader2 className="mx-auto animate-spin"/>:mode==="login"?"Sign in":"Create admin account"}</button></form>
+ {status&&<p className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white/70">{status}</p>}
+ <button onClick={()=>{setMode(mode==="login"?"signup":"login");setStatus("")}} className="mt-5 w-full text-sm text-cyan-300">{mode==="login"?"Create the admin account":"I already have an account"}</button>
+ </div></main>
 }
