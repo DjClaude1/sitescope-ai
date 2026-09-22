@@ -1,380 +1,74 @@
-import Link from "next/link";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { AuditForm } from "@/components/AuditForm";
-import {
-  Rocket,
-  ShieldCheck,
-  Search,
-  Zap,
-  Users,
-  Eye,
-  ListChecks,
-  CheckCircle2,
-  ArrowRight,
-  Quote,
-  Star,
-} from "lucide-react";
+import { ArrowRight, Check, MessageCircle, Search, Smartphone, Zap } from "lucide-react";
 
 export default function Page() {
   return (
-    <>
-      <Navbar />
-      <main className="max-w-6xl mx-auto px-5 pb-24">
-        {/* HERO */}
-        <section className="pt-16 md:pt-24 pb-12 text-center">
-          <div className="inline-flex items-center gap-2 chip mb-6">
-            <Sparkle /> AI-powered website audits · free to start
-          </div>
-          <h1 className="text-4xl md:text-6xl font-semibold tracking-tight mb-5">
-            Audit any website in{" "}
-            <span className="bg-gradient-to-r from-brand to-brand-2 bg-clip-text text-transparent">
-              under a minute
-            </span>
-            .
-          </h1>
-          <p className="text-lg text-white/70 max-w-2xl mx-auto mb-10">
-            SiteScope AI scans SEO, performance, accessibility, conversion and content —
-            then writes the fixes a senior consultant would charge $500+ for.
-          </p>
-          <div id="run" className="max-w-2xl mx-auto">
-            <AuditForm />
-            <div className="flex items-center justify-center gap-6 mt-5 text-xs text-white/50">
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> no signup
-                required
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 3 free audits /
-                day
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> shareable
-                reports
-              </span>
-            </div>
-          </div>
-        </section>
+    <main className="min-h-screen bg-[#07090d] text-white">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-6">
+        <div className="text-xl font-bold tracking-tight">LeadFix<span className="text-cyan-400">.AI</span></div>
+        <a href="#audit" className="rounded-full border border-white/15 px-4 py-2 text-sm hover:bg-white/5">Free audit</a>
+      </nav>
 
-        {/* SOCIAL PROOF / SAMPLE URLS */}
-        <section className="mb-20">
-          <div className="text-center text-xs uppercase tracking-widest text-white/40 mb-4">
-            try a demo
+      <section className="mx-auto max-w-6xl px-5 pb-20 pt-14 md:pt-24">
+        <div className="max-w-3xl">
+          <div className="mb-5 inline-flex rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-300">Cape Town • South Africa • same-day website fixes</div>
+          <h1 className="text-5xl font-black tracking-tight md:text-7xl">Turn your website into a <span className="text-cyan-400">lead machine.</span></h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-white/65">We find the leaks that make visitors leave, rebuild the important parts, and connect the site to WhatsApp so customers can actually contact you.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a href="#audit" className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-6 py-3 font-bold text-black hover:bg-cyan-300">Get my free 5-minute audit <ArrowRight size={18}/></a>
+            <a href="#pricing" className="rounded-xl border border-white/15 px-6 py-3 font-semibold hover:bg-white/5">See pricing</a>
           </div>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {["stripe.com", "vercel.com", "linear.app", "notion.so", "github.com"].map(
-              (d) => (
-                <Link
-                  key={d}
-                  href={`/?demo=${d}#run`}
-                  className="chip hover:bg-white/10 transition"
-                >
-                  {d}
-                </Link>
-              )
-            )}
-          </div>
-        </section>
+          <p className="mt-4 text-xs text-white/40">No fake guarantees. No long contracts. We show you the problems before asking you to buy.</p>
+        </div>
+      </section>
 
-        {/* FEATURES */}
-        <section className="grid md:grid-cols-3 gap-4 mb-20">
-          <Feature
-            icon={<Search className="w-5 h-5" />}
-            title="SEO audit"
-            desc="Title, meta, canonical, schema, headings, OG, Twitter — prioritized."
-          />
-          <Feature
-            icon={<Zap className="w-5 h-5" />}
-            title="Performance signals"
-            desc="HTML size, script bloat, render-blocking CSS, TTFB — caught early."
-          />
-          <Feature
-            icon={<Eye className="w-5 h-5" />}
-            title="Accessibility"
-            desc="Alt text coverage, viewport, lang attributes, semantic headings."
-          />
-          <Feature
-            icon={<Rocket className="w-5 h-5" />}
-            title="Conversion review"
-            desc="CTA coverage, trust signals, analytics, contact paths."
-          />
-          <Feature
-            icon={<ListChecks className="w-5 h-5" />}
-            title="Content analysis"
-            desc="Depth, relevance, and AI-written rewrites of weak sections."
-          />
-          <Feature
-            icon={<ShieldCheck className="w-5 h-5" />}
-            title="Actionable fixes"
-            desc="Every issue comes with the exact code or copy to paste in."
-          />
-        </section>
+      <section className="mx-auto grid max-w-6xl gap-4 px-5 pb-20 md:grid-cols-4">
+        <div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><div className="mb-3 font-bold">Website rebuild</div><p className="text-sm leading-6 text-white/55">We rebuild outdated or underperforming sites into fast, mobile-first lead pages.</p></div>
+        <div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><div className="mb-3 font-bold">WhatsApp funnel</div><p className="text-sm leading-6 text-white/55">Every key action goes straight to a WhatsApp conversation or enquiry.</p></div>
+        <div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><div className="mb-3 font-bold">Local search</div><p className="text-sm leading-6 text-white/55">We improve the pages and calls-to-action that turn local searches into calls and messages.</p></div>
+        <div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><div className="mb-3 font-bold">Conversion copy</div><p className="text-sm leading-6 text-white/55">Clear offers, trust signals and calls-to-action designed to make the next step obvious.</p></div>
+      </section>
 
-        {/* HOW IT WORKS */}
-        <section className="mb-20">
-          <SectionTitle
-            eyebrow="How it works"
-            title="Three steps. One shareable report."
-          />
-          <div className="grid md:grid-cols-3 gap-4">
-            <Step
-              n={1}
-              title="Paste a URL"
-              desc="Any public website. No install, no script tag, no waiting for DNS."
-            />
-            <Step
-              n={2}
-              title="AI scans the page"
-              desc="We parse signals + feed them to Gemini with a senior-consultant prompt."
-            />
-            <Step
-              n={3}
-              title="Get a scored report"
-              desc="5 category scores, ranked issues, quick-win recommendations — shareable."
-            />
-          </div>
-        </section>
-
-        {/* LUCRATIVE USE CASES */}
-        <section className="mb-20">
-          <SectionTitle
-            eyebrow="Who pays for this"
-            title="Built for people who sell audits."
-          />
-          <div className="grid md:grid-cols-2 gap-4">
-            <UseCase
-              icon={<Users className="w-5 h-5" />}
-              title="Agencies & freelancers"
-              desc="Run 20 prospect audits in an hour, send them in your branded PDF, close retainers."
-            />
-            <UseCase
-              icon={<Rocket className="w-5 h-5" />}
-              title="Founders & indie hackers"
-              desc="Ship your landing page, run SiteScope, fix the quick wins before you spend on ads."
-            />
-            <UseCase
-              icon={<Search className="w-5 h-5" />}
-              title="SEO consultants"
-              desc="Use the report as your kickoff deliverable. Clients love the scores."
-            />
-            <UseCase
-              icon={<Eye className="w-5 h-5" />}
-              title="E-commerce teams"
-              desc="Audit product pages weekly, catch regressions before they hurt revenue."
-            />
-          </div>
-        </section>
-
-        {/* TESTIMONIALS */}
-        <section className="mb-20">
-          <SectionTitle
-            eyebrow="Loved by builders"
-            title="What people say about the reports."
-          />
-          <div className="grid md:grid-cols-3 gap-4">
-            <Testimonial
-              name="Maya R."
-              role="Freelance SEO"
-              quote="Ran 14 prospect audits on a Saturday morning. Closed 3 retainers by Monday."
-            />
-            <Testimonial
-              name="Devon K."
-              role="Indie hacker"
-              quote="The quick-wins list is worth $300 alone. My LCP dropped 40% after the first two fixes."
-            />
-            <Testimonial
-              name="Priya S."
-              role="Agency owner"
-              quote="I stopped paying for two tools. The AI summary is what I used to write manually."
-            />
-          </div>
-        </section>
-
-        {/* CRO LEAK ANALYSIS TEASER */}
-        <section className="mb-20">
-          <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-rose-500/5 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <section className="mx-auto max-w-6xl px-5 pb-20">
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[.07] to-white/[.02] p-7 md:p-10">
+          <div className="grid gap-10 md:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-widest text-amber-300 inline-flex items-center gap-1.5 mb-2">
-                <Star className="w-3.5 h-3.5" /> Pro · senior-CRO-consultant analysis
+              <p className="text-sm font-semibold text-cyan-300">WHAT WE FIX</p>
+              <h2 className="mt-2 text-3xl font-bold">The five things that cost local businesses enquiries.</h2>
+              <div className="mt-7 space-y-4">
+                <div className="flex items-center gap-3" key="Slow or confusing mobile experience"><div className="rounded-lg bg-cyan-400/10 p-2 text-cyan-300"><Smartphone size={18}/></div><span className="text-white/75">Slow or confusing mobile experience</span></div>
+                <div className="flex items-center gap-3" key="Weak calls-to-action"><div className="rounded-lg bg-cyan-400/10 p-2 text-cyan-300"><Zap size={18}/></div><span className="text-white/75">Weak calls-to-action</span></div>
+                <div className="flex items-center gap-3" key="No obvious WhatsApp/contact path"><div className="rounded-lg bg-cyan-400/10 p-2 text-cyan-300"><MessageCircle size={18}/></div><span className="text-white/75">No obvious WhatsApp/contact path</span></div>
+                <div className="flex items-center gap-3" key="Poor local-search landing pages"><div className="rounded-lg bg-cyan-400/10 p-2 text-cyan-300"><Search size={18}/></div><span className="text-white/75">Poor local-search landing pages</span></div>
+                <div className="flex items-center gap-3" key="Outdated copy and trust signals"><div className="rounded-lg bg-cyan-400/10 p-2 text-cyan-300"><Check size={18}/></div><span className="text-white/75">Outdated copy and trust signals</span></div>
               </div>
-              <h3 className="text-2xl font-semibold mb-2">
-                What&apos;s actually costing you revenue?
-              </h3>
-              <p className="text-white/65 max-w-2xl">
-                The standard audit tells you what&apos;s <em>broken</em>. CRO leak
-                analysis tells you what&apos;s <em>losing money</em> — weak value prop,
-                missing CTAs, trust gaps — with concrete fixes, A/B test ideas,
-                and revenue-impact estimates.
-              </p>
             </div>
-            <Link href="/cro" className="btn btn-primary px-6 py-3 whitespace-nowrap">
-              Run CRO analysis <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </section>
-
-        {/* PRICING TEASER */}
-        <section className="mb-20">
-          <div className="card flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <div className="chip mb-3">Pro · $19/mo</div>
-              <h3 className="text-2xl font-semibold mb-2">
-                Unlimited audits, CRO analysis, PDF export, weekly monitoring.
-              </h3>
-              <p className="text-white/60 max-w-xl">
-                Agencies recoup Pro after closing a single client. Cancel anytime.
-                PayPal billing — no credit card stored.
-              </p>
+            <div id="audit" className="rounded-2xl bg-[#0b0f16] p-6">
+              <p className="text-sm font-semibold text-cyan-300">FREE LEAD LEAK AUDIT</p>
+              <h3 className="mt-2 text-2xl font-bold">Tell us where to look.</h3>
+              <form action="mailto:gameeater36@gmail.com" method="post" encType="text/plain" className="mt-6 space-y-3">
+                <input required name="Business" placeholder="Business name" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none placeholder:text-white/35"/>
+                <input required name="Website" placeholder="Website URL" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none placeholder:text-white/35"/>
+                <input name="WhatsApp" placeholder="WhatsApp or phone" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none placeholder:text-white/35"/>
+                <textarea required name="Problem" placeholder="What feels broken or not working?" rows={4} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none placeholder:text-white/35"/>
+                <button className="w-full rounded-xl bg-cyan-400 px-5 py-3 font-bold text-black">Request my free audit</button>
+              </form>
+              <p className="mt-3 text-xs text-white/35">We will reply with practical observations. No obligation to buy.</p>
             </div>
-            <Link href="/pricing" className="btn btn-primary px-6 py-3">
-              See pricing <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
-        </section>
-
-        {/* FAQ */}
-        <section id="faq" className="mb-10">
-          <SectionTitle eyebrow="FAQ" title="Questions, answered." />
-          <div className="grid md:grid-cols-2 gap-4">
-            <Faq
-              q="Do I need an API key?"
-              a="Not to use the hosted version. If self-hosting, drop a free Gemini API key into .env and deploy to Vercel — that's it."
-            />
-            <Faq
-              q="Will this replace Lighthouse / Ahrefs?"
-              a="It complements them. We focus on the human-readable, consultant-grade recommendations you can actually act on in under an hour."
-            />
-            <Faq
-              q="Is my audit data private?"
-              a="Audits are stored with a random ID and are accessible to anyone with the link. Sensitive internal pages should not be audited against public storage."
-            />
-            <Faq
-              q="Can I white-label the reports?"
-              a="On the Pro plan, yes. Custom logo, colors, and branded PDF export."
-            />
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </>
-  );
-}
-
-function Feature({
-  icon,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="card">
-      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand/40 to-brand-2/30 flex items-center justify-center mb-4">
-        {icon}
-      </div>
-      <div className="font-medium mb-1">{title}</div>
-      <div className="text-sm text-white/60">{desc}</div>
-    </div>
-  );
-}
-
-function Step({ n, title, desc }: { n: number; title: string; desc: string }) {
-  return (
-    <div className="card">
-      <div className="text-5xl font-semibold text-white/10 mb-2">0{n}</div>
-      <div className="font-medium mb-1">{title}</div>
-      <div className="text-sm text-white/60">{desc}</div>
-    </div>
-  );
-}
-
-function UseCase({
-  icon,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="card flex items-start gap-4">
-      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand/40 to-brand-2/30 flex items-center justify-center shrink-0">
-        {icon}
-      </div>
-      <div>
-        <div className="font-medium mb-1">{title}</div>
-        <div className="text-sm text-white/60">{desc}</div>
-      </div>
-    </div>
-  );
-}
-
-function Faq({ q, a }: { q: string; a: string }) {
-  return (
-    <div className="card">
-      <div className="font-medium mb-1">{q}</div>
-      <div className="text-sm text-white/60">{a}</div>
-    </div>
-  );
-}
-
-function Testimonial({
-  name,
-  role,
-  quote,
-}: {
-  name: string;
-  role: string;
-  quote: string;
-}) {
-  return (
-    <div className="card flex flex-col h-full">
-      <Quote className="w-5 h-5 text-white/20 mb-3" />
-      <div className="text-sm text-white/80 mb-4 flex-1">&ldquo;{quote}&rdquo;</div>
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-sm font-medium">{name}</div>
-          <div className="text-xs text-white/50">{role}</div>
         </div>
-        <div className="flex gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-          ))}
+      </section>
+
+      <section id="pricing" className="mx-auto max-w-6xl px-5 pb-20">
+        <p className="text-sm font-semibold text-cyan-300">SIMPLE PRICING</p>
+        <h2 className="mt-2 text-3xl font-bold">A small first sale can fund the next build.</h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border p-6 border-white/10 bg-white/[.03]"><div className="text-lg font-bold">Starter Fix</div><div className="mt-3 text-3xl font-black">R1,500</div><p className="mt-3 text-sm leading-6 text-white/55">One key page rebuilt + WhatsApp CTA + mobile conversion cleanup</p><a href="#audit" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-cyan-300">Start with the audit <ArrowRight size={15}/></a></div>
+          <div className="rounded-2xl border p-6 border-cyan-400/40 bg-cyan-400/[.06]"><div className="text-lg font-bold">Growth Build</div><div className="mt-3 text-3xl font-black">R3,500</div><p className="mt-3 text-sm leading-6 text-white/55">Multi-section rebuild + local SEO foundations + enquiry funnel</p><a href="#audit" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-cyan-300">Start with the audit <ArrowRight size={15}/></a></div>
+          <div className="rounded-2xl border p-6 border-white/10 bg-white/[.03]"><div className="text-lg font-bold">Care Plan</div><div className="mt-3 text-3xl font-black">R750/mo</div><p className="mt-3 text-sm leading-6 text-white/55">Updates, copy tweaks, conversion checks and monthly improvements</p><a href="#audit" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-cyan-300">Start with the audit <ArrowRight size={15}/></a></div>
         </div>
-      </div>
-    </div>
-  );
-}
+      </section>
 
-function SectionTitle({
-  eyebrow,
-  title,
-}: {
-  eyebrow: string;
-  title: string;
-}) {
-  return (
-    <div className="mb-6">
-      <div className="text-xs uppercase tracking-widest text-white/40 mb-2">
-        {eyebrow}
-      </div>
-      <h2 className="text-2xl md:text-3xl font-semibold">{title}</h2>
-    </div>
-  );
-}
-
-function Sparkle() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="w-4 h-4"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 2l1.8 5.2 5.2 1.8-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z" />
-    </svg>
+      <footer className="border-t border-white/10 px-5 py-10 text-center text-sm text-white/40">LeadFix.AI • Cape Town • Practical websites that help customers take the next step.</footer>
+    </main>
   );
 }
