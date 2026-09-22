@@ -6,13 +6,13 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "SiteScope AI — Instant AI Website Audits",
+  title: "LeadFix AI — Turn Your Website Into a Lead Machine",
   description:
-    "Get a professional-grade SEO, performance, accessibility, conversion, and content audit of any website in under a minute. Powered by AI.",
+    "Free 5-minute website and lead-leak audits for Cape Town small businesses. Find conversion problems and get practical fixes.",
   openGraph: {
-    title: "SiteScope AI — Instant AI Website Audits",
+    title: "LeadFix AI — Turn Your Website Into a Lead Machine",
     description:
-      "Professional website audits in under a minute. SEO, performance, accessibility, conversion, content — all powered by AI.",
+      "Find website conversion leaks and turn more visitors into enquiries with LeadFix AI.",
     type: "website",
   },
 };
